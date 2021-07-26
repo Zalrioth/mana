@@ -14,11 +14,16 @@
 #define GRASS_LIMIT 10000  // Chunk limit?
 #define MAX_GRASS_NUMS 15 * GRASS_LIMIT
 
+struct VertexGrass {
+  vec4 position_color;  // Position and color index
+  vec4 normal_trample;  // Floor normal and trample value
+};
+
 struct in_grass_vertices {
   alignas(16) unsigned int total_grass_vertices;
   unsigned int total_draw_grass_vertices;
   unsigned int total_draw_grass_indices;
-  alignas(16) vec4 grass_vertices[MAX_GRASS_NUMS];
+  alignas(16) struct VertexGrass grass_vertices[MAX_GRASS_NUMS];
 };
 
 struct out_draw_grass_vertices {

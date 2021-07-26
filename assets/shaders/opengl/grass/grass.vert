@@ -1,6 +1,8 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
+// Note: Make planet normal a chunk thing to save on vertex memory
+
 layout(binding = 0) uniform GrassUniformBufferObject {
   mat4 model;
   mat4 view;

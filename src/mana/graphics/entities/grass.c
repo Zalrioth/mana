@@ -35,7 +35,7 @@ int grass_init(struct Grass* grass, struct GPUAPI* gpu_api) {
 
   vector_init(&grass->grass_nodes, sizeof(vec4));
 
-  for (int loop_num = 0; loop_num < GRASS_LIMIT; loop_num++) {
+  for (int loop_num = 0; loop_num < 10; loop_num++) {
     vec4 grass_rand = {randf() * 10, randf() * 10, randf() * 10, 0.0f};
     vector_push_back(&grass->grass_nodes, &grass_rand);
   }

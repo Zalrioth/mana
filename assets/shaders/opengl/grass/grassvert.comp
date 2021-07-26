@@ -1,11 +1,10 @@
 #version 450
 
+// Note: Recompute grass per frame on high lod chunk?
+
 struct VertexGrass {
-  vec3 position;
-  vec3 color;
-  vec3 normal;
-  vec3 wind_pos;
-  float trample_value;
+  vec4 position_color; // Position and color index
+  vec4 normal_trample; // Floor normal and trample value
 };
 
 struct DrawGrass {
@@ -16,7 +15,7 @@ layout(std430, set=0, binding=0) buffer in_grass_vertices {
 		uint total_grass_vertices;
 		uint total_draw_grass_vertices;
 		uint total_draw_grass_indices;
-		vec4 grass_vertices[];
+		struct VertexGrass grass_vertices[]; 
 	};
 
 layout(std430, set=0, binding=1) buffer out_draw_grass_vertices {
