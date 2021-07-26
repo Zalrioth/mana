@@ -95,7 +95,7 @@ int atmospheric_scattering_shader_init(struct AtmosphericScatteringShader* atmos
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(atmospheric_scattering_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/atmosphericscattering.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false);
+  shader_init(atmospheric_scattering_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/atmosphericscattering.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false, VK_CULL_MODE_BACK_BIT);
 
   graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct AtmosphericScatteringUniformBufferObject), &atmospheric_scattering_shader->uniform_buffer, &atmospheric_scattering_shader->uniform_buffer_memory);
   graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct AtmosphericScatteringUniformBufferObjectSettings), &atmospheric_scattering_shader->uniform_buffer_settings, &atmospheric_scattering_shader->uniform_buffer_settings_memory);

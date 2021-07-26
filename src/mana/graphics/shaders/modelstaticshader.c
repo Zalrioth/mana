@@ -127,7 +127,7 @@ int model_static_shader_init(struct ModelStaticShader* model_static_shader, stru
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&model_static_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/modelstatic.vert.spv", "./assets/shaders/spirv/model.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_TRUE, gpu_api->vulkan_state->msaa_samples, true);
+  shader_init(&model_static_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/modelstatic.vert.spv", "./assets/shaders/spirv/model.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_TRUE, gpu_api->vulkan_state->msaa_samples, true, VK_CULL_MODE_BACK_BIT);
 
   return 1;
 }

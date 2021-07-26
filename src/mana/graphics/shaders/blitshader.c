@@ -57,7 +57,7 @@ int blit_shader_init(struct BlitShader* blit_shader, struct VulkanState* vulkan_
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false);
+  shader_init(blit_shader->shader, vulkan_renderer, "./assets/shaders/spirv/screenspace.vert.spv", "./assets/shaders/spirv/blit.frag.spv", NULL, vertex_input_info, render_pass, color_blending, VK_FRONT_FACE_CLOCKWISE, VK_FALSE, VK_SAMPLE_COUNT_1_BIT, false, VK_CULL_MODE_BACK_BIT);
 
   return 1;
 }

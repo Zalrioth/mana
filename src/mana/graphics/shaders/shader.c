@@ -1,6 +1,6 @@
 #include "mana/graphics/shaders/shader.h"
 
-int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* compute_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled) {
+int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* compute_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled, VkCullModeFlags cull_mode) {
   int vertex_length = 0;
   int fragment_length = 0;
 
@@ -69,7 +69,7 @@ int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char
   rasterizer.rasterizerDiscardEnable = VK_FALSE;
   rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
   rasterizer.lineWidth = 1.0f;
-  rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;  // VK_CULL_MODE_NONE;
+  rasterizer.cullMode = cull_mode;
   rasterizer.frontFace = direction;
   rasterizer.depthBiasEnable = VK_FALSE;
 

@@ -134,10 +134,8 @@ void sprite_recreate(struct Sprite* sprite, struct GPUAPI* gpu_api) {
   graphics_utils_setup_descriptor(gpu_api->vulkan_state, sprite->shader->descriptor_set_layout, sprite->shader->descriptor_pool, &sprite->descriptor_set);
 
   VkWriteDescriptorSet dcs[2] = {0};
-
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &sprite->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct SpriteUniformBufferObject), &sprite->uniform_buffer)});
   graphics_utils_setup_descriptor_image(gpu_api->vulkan_state, dcs, 1, &sprite->descriptor_set, (VkDescriptorImageInfo[]){graphics_utils_setup_descriptor_image_info(&sprite->image_texture->texture_image_view, &sprite->image_texture->texture_sampler)});
-
   vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
-  vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
+  //vkUpdateDescriptorSets(gpu_api->vulkan_state->device, 2, dcs, 0, NULL);
 }

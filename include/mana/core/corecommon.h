@@ -13,4 +13,6 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+#define randf() (float)rand() / (float)(RAND_MAX)
+
 #endif  // CORE_COMMON_H

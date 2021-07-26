@@ -74,7 +74,7 @@ static int vulkan_core_create_instance(struct VulkanState* vulkan_state, const c
   VkApplicationInfo app_info = {0};
   app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   // TODO: Pull name and version from engine
-  app_info.pApplicationName = "Zeal";
+  app_info.pApplicationName = "TODO";
   app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   app_info.pEngineName = "Mana";
   app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);

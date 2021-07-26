@@ -1,10 +1,118 @@
 #version 450
 
-layout(std430, set=0, binding=0) buffer inA { float a[]; };
-layout(std430, set=0, binding=1) buffer inB { float b[]; };
-layout(std430, set=0, binding=2) buffer outR { float result[]; };
+// Note: Recompute grass per frame on high lod chunk?
 
-void main(){
-	const uint i = gl_GlobalInvocationID.x;
-	result[i] = a[i] + b[i];
+struct VertexGrass {
+  vec4 position_color; // Position and color index
+  vec4 normal_trample; // Floor normal and trample value
+};
+
+struct DrawGrass {
+	vec3 position;
+};
+
+layout(std430, set=0, binding=0) buffer in_grass_vertices {
+		uint total_grass_vertices;
+		uint total_draw_grass_vertices;
+		uint total_draw_grass_indices;
+		struct VertexGrass grass_vertices[]; 
+	};
+
+layout(std430, set=0, binding=1) buffer out_draw_grass_vertices {
+		vec4 draw_grass_vertices[];
+	};
+layout(std430, set=0, binding=2) buffer out_draw_grass_indices {
+		uint draw_grass_indices[];
+};
+
+// https://github.com/Zhylkaaa/vulkan-compute-examples/blob/master/vector_add/shaders/vector_add.comp
+// https://stackoverflow.com/questions/19956906/aligning-structures-to-std140-cpu-side
+void main() {
+	vec4 grass_vertex = grass_vertices[gl_GlobalInvocationID.x];
+
+	int lod_level = 2;
+
+	// Calculate distance for lod level
+
+	// Note: make distances normalized then multiply by height/rotation matrices and vectors
+
+	// Wind waker grass is literally 5 triangles
+	if (lod_level == 0) {
+		uint total_vertices = 3;
+		uint total_indices = 3;
+
+		uint vertex_start = atomicAdd(total_draw_grass_vertices, total_vertices);
+		uint indice_start = atomicAdd(total_draw_grass_indices, total_indices);
+
+		// Color value is pallete xpos
+		draw_grass_vertices[vertex_start] = grass_vertex + vec4(-1.0, 0.0, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 1] = grass_vertex + vec4(0.0, 1.0, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 2] = grass_vertex + vec4(1.0, 0.0, 0.0, 0.0);
+
+		draw_grass_indices[indice_start + 0] = vertex_start + 0;
+		draw_grass_indices[indice_start + 1] = vertex_start + 1;
+		draw_grass_indices[indice_start + 2] = vertex_start + 2;
+	}
+	else if (lod_level == 1) {
+		uint total_vertices = 5;
+		uint total_indices = 9;
+
+		uint vertex_start = atomicAdd(total_draw_grass_vertices, total_vertices);
+		uint indice_start = atomicAdd(total_draw_grass_indices, total_indices);
+
+		// Color value is pallete xpos
+		draw_grass_vertices[vertex_start + 0] = grass_vertex + vec4(-1.0, 0.0, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 1] = grass_vertex + vec4(1.0, 0.0, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 2] = grass_vertex + vec4(0.8, 0.5, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 3] = grass_vertex + vec4(-0.8, 0.5, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 4] = grass_vertex + vec4(0.0, 1.0, 0.0, 0.0);
+
+		draw_grass_indices[indice_start + 0] = vertex_start + 0;
+		draw_grass_indices[indice_start + 1] = vertex_start + 1;
+		draw_grass_indices[indice_start + 2] = vertex_start + 2;
+
+		draw_grass_indices[indice_start + 3] = vertex_start + 2;
+		draw_grass_indices[indice_start + 4] = vertex_start + 0;
+		draw_grass_indices[indice_start + 5] = vertex_start + 3;
+
+		draw_grass_indices[indice_start + 6] = vertex_start + 3;
+		draw_grass_indices[indice_start + 7] = vertex_start + 2;
+		draw_grass_indices[indice_start + 8] = vertex_start + 4;
+	}
+		else if (lod_level == 2) {
+		uint total_vertices = 7;
+		uint total_indices = 15;
+
+		uint vertex_start = atomicAdd(total_draw_grass_vertices, total_vertices);
+		uint indice_start = atomicAdd(total_draw_grass_indices, total_indices);
+
+		// Color value is pallete xpos
+		draw_grass_vertices[vertex_start + 0] = grass_vertex + vec4(-0.8, 0.0, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 1] = grass_vertex + vec4(0.8, 0.0, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 2] = grass_vertex + vec4(1.0, 0.33, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 3] = grass_vertex + vec4(-1.0, 0.33, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 4] = grass_vertex + vec4(0.6, 0.66, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 5] = grass_vertex + vec4(-0.6, 0.66, 0.0, 0.0);
+		draw_grass_vertices[vertex_start + 6] = grass_vertex + vec4(0.0, 1.0, 0.0, 0.0);
+
+		draw_grass_indices[indice_start + 0] = vertex_start + 0;
+		draw_grass_indices[indice_start + 1] = vertex_start + 1;
+		draw_grass_indices[indice_start + 2] = vertex_start + 2;
+
+		draw_grass_indices[indice_start + 3] = vertex_start + 2;
+		draw_grass_indices[indice_start + 4] = vertex_start + 0;
+		draw_grass_indices[indice_start + 5] = vertex_start + 3;
+
+		draw_grass_indices[indice_start + 6] = vertex_start + 3;
+		draw_grass_indices[indice_start + 7] = vertex_start + 2;
+		draw_grass_indices[indice_start + 8] = vertex_start + 4;
+
+		draw_grass_indices[indice_start + 9] = vertex_start + 3;
+		draw_grass_indices[indice_start + 10] = vertex_start + 5;
+		draw_grass_indices[indice_start + 11] = vertex_start + 4;
+
+		draw_grass_indices[indice_start + 12] = vertex_start + 4;
+		draw_grass_indices[indice_start + 13] = vertex_start + 5;
+		draw_grass_indices[indice_start + 14] = vertex_start + 6;
+	}
 }

@@ -57,6 +57,10 @@ struct VertexManifoldDualContouring {
   vec3 normal2;
 };
 
+struct VertexGrass {
+  vec4 position_color;
+};
+
 struct Mesh {
   struct Vector* vertices;
   struct Vector* indices;
@@ -98,6 +102,11 @@ static inline void mesh_manifold_dual_contouring_assign_vertex(struct Vector* ve
 static inline void mesh_manifold_dual_contouring_assign_vertex_simple(struct Vector* vector, struct VertexManifoldDualContouring vertex);
 static inline VkVertexInputBindingDescription mesh_manifold_dual_contouring_get_binding_description();
 static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
+
+static inline void mesh_grass_init(struct Mesh* mesh);
+static inline void mesh_grass_assign_vertex(struct Vector* vector, float x, float y, float z, float w);
+static inline VkVertexInputBindingDescription mesh_grass_get_binding_description();
+static inline void mesh_grass_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions);
 
 static inline void mesh_delete(struct Mesh* mesh);
 static inline void mesh_clear(struct Mesh* mesh);
@@ -488,6 +497,42 @@ static inline void mesh_manifold_dual_contouring_get_attribute_descriptions(VkVe
   attribute_descriptions[3].location = 3;
   attribute_descriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
   attribute_descriptions[3].offset = offsetof(struct VertexManifoldDualContouring, normal2);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+static inline void mesh_grass_init(struct Mesh* mesh) {
+  mesh->vertices = calloc(1, sizeof(struct Vector));
+  vector_init(mesh->vertices, sizeof(struct VertexGrass));
+
+  mesh->indices = calloc(1, sizeof(struct Vector));
+  vector_init(mesh->indices, sizeof(uint32_t));
+}
+
+static inline void mesh_grass_assign_vertex(struct Vector* vector, float x, float y, float z, float w) {
+  struct VertexGrass vertex = {{0}};
+  vertex.position_color.x = x;
+  vertex.position_color.y = y;
+  vertex.position_color.z = z;
+  vertex.position_color.w = w;
+
+  vector_push_back(vector, &vertex);
+}
+
+static inline VkVertexInputBindingDescription mesh_grass_get_binding_description() {
+  VkVertexInputBindingDescription binding_description = {0};
+  binding_description.binding = 0;
+  binding_description.stride = sizeof(struct VertexGrass);
+  binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+  return binding_description;
+}
+
+static inline void mesh_grass_get_attribute_descriptions(VkVertexInputAttributeDescription* attribute_descriptions) {
+  attribute_descriptions[0].binding = 0;
+  attribute_descriptions[0].location = 0;
+  attribute_descriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+  attribute_descriptions[0].offset = offsetof(struct VertexGrass, position_color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@ struct Shader {
 
 // TODO: Create struct for settings to reduce parameters
 // NOTE: Geometry shaders disabled because they suck
-int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* compute_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled);
+int shader_init(struct Shader* shader, struct VulkanState* vulkan_renderer, char* vertex_shader, char* fragment_shader, char* compute_shader, VkPipelineVertexInputStateCreateInfo vertex_input_info, VkRenderPass render_pass, VkPipelineColorBlendStateCreateInfo color_blending, VkFrontFace direction, bool depth_test, VkSampleCountFlagBits num_samples, bool supersampled, VkCullModeFlags cull_mode);
 int shader_init_comp(struct Shader* shader, struct VulkanState* vulkan_renderer, char* compute_shader);
 void shader_delete(struct Shader* shader, struct VulkanState* vulkan_renderer);
 VkShaderModule shader_create_shader_module(struct VulkanState* vulkan_renderer, const char* code, int length);

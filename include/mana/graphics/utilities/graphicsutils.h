@@ -28,8 +28,13 @@ static inline VkFormat graphics_utils_find_depth_format(VkPhysicalDevice physica
 static inline void graphics_utils_create_color_attachment(VkFormat image_format, struct VkAttachmentDescription *color_attachment);
 static inline void graphics_utils_create_depth_attachment(VkPhysicalDevice physical_device, struct VkAttachmentDescription *depth_attachment);
 static inline void graphics_utisl_copy_buffer(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size);
+static inline void graphics_utisl_copy_buffer_offset(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size, unsigned int offset);
 static inline void graphics_utils_setup_vertex_buffer(struct VulkanState *vulkan_state, struct Vector *vertices, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory);
+static inline void graphics_utils_setup_vertex_buffer_pool(struct VulkanState *vulkan_state, struct Vector *vertices, int total_pool_elements, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory);
+static inline void graphics_utils_update_vertex_buffer(struct VulkanState *vulkan_state, struct Vector *vertices, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory);
 static inline void graphics_utils_setup_index_buffer(struct VulkanState *vulkan_state, struct Vector *indices, VkBuffer *index_buffer, VkDeviceMemory *index_buffer_memory);
+static inline void graphics_utils_setup_index_buffer_pool(struct VulkanState *vulkan_state, struct Vector *indices, int total_pool_elements, VkBuffer *index_buffer, VkDeviceMemory *index_buffer_memory);
+static inline void graphics_utils_update_index_buffer(struct VulkanState *vulkan_state, struct Vector *indices, VkBuffer *index_buffer, VkDeviceMemory *index_buffer_memory);
 static inline void graphics_utils_setup_uniform_buffer(struct VulkanState *vulkan_state, size_t memory_size, VkBuffer *uniform_buffer, VkDeviceMemory *uniform_buffer_memory);
 static inline int graphics_utils_setup_descriptor(struct VulkanState *vulkan_state, struct VkDescriptorSetLayout_T *descriptor_set_layout, struct VkDescriptorPool_T *descriptor_pool, VkDescriptorSet *descriptor_set);
 static inline VkDescriptorBufferInfo graphics_utils_setup_descriptor_buffer_info(size_t memory_size, VkBuffer *uniform_buffer);
@@ -379,6 +384,17 @@ static inline void graphics_utisl_copy_buffer(struct VulkanState *vulkan_state, 
   graphics_utils_end_single_time_commands(vulkan_state->device, vulkan_state->graphics_queue, vulkan_state->command_pool, command_buffer);
 }
 
+static inline void graphics_utisl_copy_buffer_offset(struct VulkanState *vulkan_state, VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size, unsigned int offset) {
+  VkCommandBuffer command_buffer = graphics_utils_begin_single_time_commands(vulkan_state->device, vulkan_state->command_pool);
+
+  VkBufferCopy copy_region = {0};
+  copy_region.size = size;
+  copy_region.srcOffset = offset;
+  vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region);
+
+  graphics_utils_end_single_time_commands(vulkan_state->device, vulkan_state->graphics_queue, vulkan_state->command_pool, command_buffer);
+}
+
 static inline void graphics_utils_setup_vertex_buffer(struct VulkanState *vulkan_state, struct Vector *vertices, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory) {
   VkDeviceSize vertex_buffer_size = vertices->memory_size * vertices->size;
   VkBuffer vertex_staging_buffer = {0};
@@ -394,6 +410,25 @@ static inline void graphics_utils_setup_vertex_buffer(struct VulkanState *vulkan
   vkFreeMemory(vulkan_state->device, vertex_staging_buffer_memory, NULL);
 }
 
+static inline void graphics_utils_setup_vertex_buffer_pool(struct VulkanState *vulkan_state, struct Vector *vertices, int total_pool_elements, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory) {
+  VkDeviceSize vertex_buffer_size = vertices->memory_size * total_pool_elements;
+  graphics_utils_create_buffer(vulkan_state->device, vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertex_buffer, vertex_buffer_memory);
+}
+
+static inline void graphics_utils_update_vertex_buffer(struct VulkanState *vulkan_state, struct Vector *vertices, VkBuffer *vertex_buffer, VkDeviceMemory *vertex_buffer_memory) {
+  VkDeviceSize vertex_buffer_size = vertices->memory_size * vertices->size;
+  VkBuffer vertex_staging_buffer = {0};
+  VkDeviceMemory vertex_staging_buffer_memory = {0};
+  graphics_utils_create_buffer(vulkan_state->device, vulkan_state->physical_device, vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertex_staging_buffer, &vertex_staging_buffer_memory);
+  void *vertex_data;
+  vkMapMemory(vulkan_state->device, vertex_staging_buffer_memory, 0, vertex_buffer_size, 0, &vertex_data);
+  memcpy(vertex_data, vertices->items, vertex_buffer_size);
+  vkUnmapMemory(vulkan_state->device, vertex_staging_buffer_memory);
+  graphics_utisl_copy_buffer(vulkan_state, vertex_staging_buffer, *vertex_buffer, vertex_buffer_size);
+  vkDestroyBuffer(vulkan_state->device, vertex_staging_buffer, NULL);
+  vkFreeMemory(vulkan_state->device, vertex_staging_buffer_memory, NULL);
+}
+
 static inline void graphics_utils_setup_index_buffer(struct VulkanState *vulkan_state, struct Vector *indices, VkBuffer *index_buffer, VkDeviceMemory *index_buffer_memory) {
   VkDeviceSize index_buffer_size = indices->memory_size * indices->size;
   VkBuffer index_staging_buffer = {0};
@@ -404,6 +439,25 @@ static inline void graphics_utils_setup_index_buffer(struct VulkanState *vulkan_
   memcpy(index_data, indices->items, index_buffer_size);
   vkUnmapMemory(vulkan_state->device, index_staging_buffer_memory);
   graphics_utils_create_buffer(vulkan_state->device, vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, index_buffer, index_buffer_memory);
+  graphics_utisl_copy_buffer(vulkan_state, index_staging_buffer, *index_buffer, index_buffer_size);
+  vkDestroyBuffer(vulkan_state->device, index_staging_buffer, NULL);
+  vkFreeMemory(vulkan_state->device, index_staging_buffer_memory, NULL);
+}
+
+static inline void graphics_utils_setup_index_buffer_pool(struct VulkanState *vulkan_state, struct Vector *indices, int total_pool_elements, VkBuffer *index_buffer, VkDeviceMemory *index_buffer_memory) {
+  VkDeviceSize index_buffer_size = indices->memory_size * total_pool_elements;
+  graphics_utils_create_buffer(vulkan_state->device, vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, index_buffer, index_buffer_memory);
+}
+
+static inline void graphics_utils_update_index_buffer(struct VulkanState *vulkan_state, struct Vector *indices, VkBuffer *index_buffer, VkDeviceMemory *index_buffer_memory) {
+  VkDeviceSize index_buffer_size = indices->memory_size * indices->size;
+  VkBuffer index_staging_buffer = {0};
+  VkDeviceMemory index_staging_buffer_memory = {0};
+  graphics_utils_create_buffer(vulkan_state->device, vulkan_state->physical_device, index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &index_staging_buffer, &index_staging_buffer_memory);
+  void *index_data;
+  vkMapMemory(vulkan_state->device, index_staging_buffer_memory, 0, index_buffer_size, 0, &index_data);
+  memcpy(index_data, indices->items, index_buffer_size);
+  vkUnmapMemory(vulkan_state->device, index_staging_buffer_memory);
   graphics_utisl_copy_buffer(vulkan_state, index_staging_buffer, *index_buffer, index_buffer_size);
   vkDestroyBuffer(vulkan_state->device, index_staging_buffer, NULL);
   vkFreeMemory(vulkan_state->device, index_staging_buffer_memory, NULL);

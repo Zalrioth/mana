@@ -81,7 +81,7 @@ int sprite_animation_shader_init(struct SpriteAnimationShader* sprite_animation_
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  shader_init(&sprite_animation_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/spriteanimation.vert.spv", "./assets/shaders/spirv/spriteanimation.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, depth_test, gpu_api->vulkan_state->msaa_samples, 0);
+  shader_init(&sprite_animation_shader->shader, gpu_api->vulkan_state, "./assets/shaders/spirv/spriteanimation.vert.spv", "./assets/shaders/spirv/spriteanimation.frag.spv", NULL, vertex_input_info, gpu_api->vulkan_state->gbuffer->render_pass, color_blending, VK_FRONT_FACE_COUNTER_CLOCKWISE, depth_test, gpu_api->vulkan_state->msaa_samples, 0, VK_CULL_MODE_BACK_BIT);
 
   return 1;
 }
