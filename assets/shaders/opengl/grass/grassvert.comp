@@ -15,7 +15,8 @@ layout(std430, set=0, binding=0) buffer in_grass_vertices {
 		uint total_grass_vertices;
 		uint total_draw_grass_vertices;
 		uint total_draw_grass_indices;
-		struct VertexGrass grass_vertices[]; 
+		vec4 grass_vertices[];
+		//struct VertexGrass grass_vertices[]; 
 	};
 
 layout(std430, set=0, binding=1) buffer out_draw_grass_vertices {
