@@ -35,8 +35,8 @@ struct out_draw_grass_indices {
 };
 
 struct GrassShader {
-  struct Shader grass_compute_shader;
-  struct Shader grass_render_shader;
+  struct Shader* grass_compute_shader;
+  struct Shader* grass_render_shader;
 
   int buf_size[3];
 

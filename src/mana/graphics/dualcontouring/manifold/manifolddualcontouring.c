@@ -38,8 +38,13 @@ void manifold_dual_contouring_delete(struct ManifoldDualContouring* manifold_dua
     free(*(char**)map_get(&vertice_map, key));
   map_delete(&vertice_map);
 
+  for (int series_num = 1; series_num < MAX_MANIFOLD_OCTREE_LEVELS; series_num++)
+    free(manifold_dual_contouring->node_cache[series_num]);
+
   mesh_delete(manifold_dual_contouring->mesh);
   free(manifold_dual_contouring->mesh);
+
+  free(manifold_dual_contouring->tree);
   //noise_free(manifold_dual_contouring->noise_set);
 }
 
@@ -69,7 +74,7 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
 #if MANIFOLD_BENCHMARK
   double start_time, end_time;
   start_time = engine_get_time();
-  manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, noises);
   end_time = engine_get_time();
   printf("Construct base time taken: %lf\n", end_time - start_time);
   // ~1.0 start

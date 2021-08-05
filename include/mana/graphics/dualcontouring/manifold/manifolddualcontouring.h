@@ -27,6 +27,7 @@ struct ManifoldDualContouring {
   int resolution;
   int octree_size;
   struct ManifoldOctreeNode* tree;
+  struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS];
   struct ArrayList* vertice_list;
 
   struct Shader* shader;

@@ -27,7 +27,7 @@ int grass_init(struct Grass* grass, struct GPUAPI* gpu_api) {
   vkBindBufferMemory(gpu_api->vulkan_state->device, grass->index_buffer, grass->grass_shader.grass_compute_memory[2], 0);
 
   graphics_utils_setup_uniform_buffer(gpu_api->vulkan_state, sizeof(struct GrassUniformBufferObject), &grass->uniform_buffer, &grass->uniform_buffers_memory);
-  graphics_utils_setup_descriptor(gpu_api->vulkan_state, grass->grass_shader.grass_render_shader.descriptor_set_layout, grass->grass_shader.grass_render_shader.descriptor_pool, &grass->descriptor_set);
+  graphics_utils_setup_descriptor(gpu_api->vulkan_state, grass->grass_shader.grass_render_shader->descriptor_set_layout, grass->grass_shader.grass_render_shader->descriptor_pool, &grass->descriptor_set);
 
   VkWriteDescriptorSet dcs[1] = {0};
   graphics_utils_setup_descriptor_buffer(gpu_api->vulkan_state, dcs, 0, &grass->descriptor_set, (VkDescriptorBufferInfo[]){graphics_utils_setup_descriptor_buffer_info(sizeof(struct GrassUniformBufferObject), &grass->uniform_buffer)});
@@ -53,6 +53,8 @@ static inline void grass_vulkan_cleanup(struct Grass* grass, struct GPUAPI* gpu_
 void grass_delete(struct Grass* grass, struct VulkanState* vulkan_state) {
   grass_shader_delete(&grass->grass_shader, vulkan_state);
 
+  vector_delete(&grass->grass_nodes);
+
   vkDestroyBuffer(vulkan_state->device, grass->index_buffer, NULL);
   vkDestroyBuffer(vulkan_state->device, grass->vertex_buffer, NULL);
 }
@@ -67,8 +69,8 @@ void grass_render(struct Grass* grass, struct GPUAPI* gpu_api) {
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     vkBeginCommandBuffer(grass->grass_shader.commandBuffer, &beginInfo);
 
-    vkCmdBindPipeline(grass->grass_shader.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, grass->grass_shader.grass_compute_shader.graphics_pipeline);
-    vkCmdBindDescriptorSets(grass->grass_shader.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, grass->grass_shader.grass_compute_shader.pipeline_layout, 0, 1, &grass->grass_shader.descriptorSet, 0, NULL);
+    vkCmdBindPipeline(grass->grass_shader.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, grass->grass_shader.grass_compute_shader->graphics_pipeline);
+    vkCmdBindDescriptorSets(grass->grass_shader.commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, grass->grass_shader.grass_compute_shader->pipeline_layout, 0, 1, &grass->grass_shader.descriptorSet, 0, NULL);
     vkCmdDispatch(grass->grass_shader.commandBuffer, elements, 1, 1);
     vkEndCommandBuffer(grass->grass_shader.commandBuffer);
 
@@ -99,13 +101,13 @@ void grass_render(struct Grass* grass, struct GPUAPI* gpu_api) {
     vkUnmapMemory(gpu_api->vulkan_state->device, grass->grass_shader.grass_compute_memory[0]);
   }
 
-  vkCmdBindPipeline(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, grass->grass_shader.grass_render_shader.graphics_pipeline);
+  vkCmdBindPipeline(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, grass->grass_shader.grass_render_shader->graphics_pipeline);
 
   VkBuffer vertex_buffers[] = {grass->vertex_buffer};
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, 0, 1, vertex_buffers, offsets);
   vkCmdBindIndexBuffer(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, grass->index_buffer, 0, VK_INDEX_TYPE_UINT32);
-  vkCmdBindDescriptorSets(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, grass->grass_shader.grass_render_shader.pipeline_layout, 0, 1, &grass->descriptor_set, 0, NULL);
+  vkCmdBindDescriptorSets(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, grass->grass_shader.grass_render_shader->pipeline_layout, 0, 1, &grass->descriptor_set, 0, NULL);
   vkCmdDrawIndexed(gpu_api->vulkan_state->gbuffer->gbuffer_command_buffer, grass->index_size, 1, 0, 0, 0);
 }
 

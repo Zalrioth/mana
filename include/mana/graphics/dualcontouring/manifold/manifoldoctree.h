@@ -8,6 +8,8 @@
 #include <cstorage/cstorage.h>
 #include <ubermath/ubermath.h>
 
+#define MAX_MANIFOLD_OCTREE_LEVELS 8
+
 #include "mana/graphics/dualcontouring/manifold/manifolddualcontouring.h"
 #include "mana/graphics/dualcontouring/manifold/manifoldtables.h"
 #include "mana/graphics/dualcontouring/qef.h"
@@ -58,7 +60,8 @@ struct ManifoldOctreeNode {
   int child_index;
 };
 
-static inline void octree_node_init(struct ManifoldOctreeNode* octree_node, vec3 position, int size, enum NodeType type) {
+static inline void
+octree_node_init(struct ManifoldOctreeNode* octree_node, vec3 position, int size, enum NodeType type) {
   octree_node->index = 0;
   octree_node->position = position;
   octree_node->size = size;
@@ -130,7 +133,7 @@ static inline vec3 planet_normal(vec3 v, struct Vector* noises, int scale) {
 #endif
 }
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, int size, struct Vector* noises);
+void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, struct Vector* noises);
 void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct Map* vertice_map);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold);

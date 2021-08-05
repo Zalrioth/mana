@@ -14,6 +14,9 @@ static inline uint32_t findMemoryType(struct GPUAPI* gpu_api, uint32_t typeFilte
 }
 
 int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) {
+  grass_shader->grass_compute_shader = calloc(1, sizeof(struct Shader));
+  grass_shader->grass_render_shader = calloc(1, sizeof(struct Shader));
+
   // Compute shader
   VkDescriptorSetLayoutBinding layout_bindings[3] = {0};
   for (uint32_t i = 0; i < 3; i++) {
@@ -30,7 +33,7 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
   set_layout_create_info.bindingCount = 3;
   set_layout_create_info.pBindings = layout_bindings;
 
-  if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &set_layout_create_info, NULL, &grass_shader->grass_compute_shader.descriptor_set_layout) != VK_SUCCESS)
+  if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &set_layout_create_info, NULL, &grass_shader->grass_compute_shader->descriptor_set_layout) != VK_SUCCESS)
     return -1;
 
   shader_init_comp(&grass_shader->grass_compute_shader, gpu_api->vulkan_state, "./assets/shaders/spirv/grassvert.comp.spv");
@@ -84,14 +87,14 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
 
   descriptorPoolCreateInfo.poolSizeCount = 1;
   descriptorPoolCreateInfo.pPoolSizes = &poolSize;
-  if (vkCreateDescriptorPool(gpu_api->vulkan_state->device, &descriptorPoolCreateInfo, NULL, &grass_shader->grass_compute_shader.descriptor_pool) != VK_SUCCESS)
+  if (vkCreateDescriptorPool(gpu_api->vulkan_state->device, &descriptorPoolCreateInfo, NULL, &grass_shader->grass_compute_shader->descriptor_pool) != VK_SUCCESS)
     return 1;
 
   VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {0};
   descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  descriptorSetAllocateInfo.descriptorPool = grass_shader->grass_compute_shader.descriptor_pool;
+  descriptorSetAllocateInfo.descriptorPool = grass_shader->grass_compute_shader->descriptor_pool;
   descriptorSetAllocateInfo.descriptorSetCount = 1;
-  descriptorSetAllocateInfo.pSetLayouts = &grass_shader->grass_compute_shader.descriptor_set_layout;
+  descriptorSetAllocateInfo.pSetLayouts = &grass_shader->grass_compute_shader->descriptor_set_layout;
 
   if (vkAllocateDescriptorSets(gpu_api->vulkan_state->device, &descriptorSetAllocateInfo, &grass_shader->descriptorSet) != VK_SUCCESS)
     return 1;
@@ -157,7 +160,7 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
   layout_info.bindingCount = 1;
   layout_info.pBindings = bindings;
 
-  if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &grass_shader->grass_render_shader.descriptor_set_layout) != VK_SUCCESS)
+  if (vkCreateDescriptorSetLayout(gpu_api->vulkan_state->device, &layout_info, NULL, &grass_shader->grass_render_shader->descriptor_set_layout) != VK_SUCCESS)
     return 0;
 
   int sprite_descriptors = 1;
@@ -171,7 +174,7 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
   pool_info.pPoolSizes = pool_sizes;
   pool_info.maxSets = sprite_descriptors;  // Max number of sets made from this pool
 
-  if (vkCreateDescriptorPool(gpu_api->vulkan_state->device, &pool_info, NULL, &grass_shader->grass_render_shader.descriptor_pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(gpu_api->vulkan_state->device, &pool_info, NULL, &grass_shader->grass_render_shader->descriptor_pool) != VK_SUCCESS) {
     fprintf(stderr, "failed to create descriptor pool!\n");
     return 0;
   }
@@ -220,7 +223,7 @@ int grass_shader_init(struct GrassShader* grass_shader, struct GPUAPI* gpu_api) 
 }
 
 void grass_shader_delete(struct GrassShader* grass_shader, struct VulkanState* vulkan_renderer) {
-  vkDestroyDescriptorPool(vulkan_renderer->device, &grass_shader->grass_compute_shader.descriptor_pool, NULL);
-  shader_delete(&grass_shader->grass_compute_shader, vulkan_renderer);
+  vkDestroyDescriptorPool(vulkan_renderer->device, &grass_shader->grass_compute_shader->descriptor_pool, NULL);
+  shader_delete(grass_shader->grass_compute_shader, vulkan_renderer);
   free(&grass_shader->grass_compute_shader);
 }
