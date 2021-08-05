@@ -14,7 +14,7 @@
 #include "mana/graphics/dualcontouring/qef.h"
 #include "mana/graphics/utilities/mesh.h"
 
-#define MANIFOLD_BENCHMARK true
+#define MANIFOLD_BENCHMARK 0
 
 struct ManifoldDualContouringUniformBufferObject {
   alignas(32) mat4 model;

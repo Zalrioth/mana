@@ -124,10 +124,10 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   //end_time = engine_get_time();
   //printf("Gpu test: %lf\n", end_time - start_time);
 #else
-  manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->resolution, noises);
-  manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0, noises);
-  manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);
-  manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);
+  manifold_octree_construct_base(manifold_dual_contouring->tree, manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, noises);  // Memory representation of nodes
+  manifold_octree_cluster_cell_base(manifold_dual_contouring->tree, 0, noises);                                                                        // Finds vertices
+  manifold_octree_generate_vertex_buffer(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->vertices);                                    // Finds normals and puts vertices in buffer
+  manifold_octree_process_cell(manifold_dual_contouring->tree, manifold_dual_contouring->mesh->indices, threshold);                                    // Finds indices and puts indices in buffer
 #endif
 
   if (vector_size(manifold_dual_contouring->mesh->vertices) > 0)
