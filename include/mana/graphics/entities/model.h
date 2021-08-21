@@ -104,8 +104,10 @@ struct Model {
 
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
+
   VkBuffer index_buffer;
   VkDeviceMemory index_buffer_memory;
+
   VkBuffer uniform_buffer;
   VkDeviceMemory uniform_buffers_memory;
 
@@ -114,6 +116,7 @@ struct Model {
 
   VkBuffer lighting_uniform_buffer;
   VkDeviceMemory lighting_uniform_buffers_memory;
+
   VkDescriptorSet descriptor_set;
 };
 

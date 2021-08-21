@@ -32,14 +32,19 @@ struct ManifoldDualContouring {
 
   struct Shader* shader;
   struct Mesh* mesh;
+
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_buffer_memory;
+
   VkBuffer index_buffer;
   VkDeviceMemory index_buffer_memory;
+
   VkBuffer dc_uniform_buffer;
   VkDeviceMemory dc_uniform_buffer_memory;
+
   VkBuffer lighting_uniform_buffer;
   VkDeviceMemory lighting_uniform_buffer_memory;
+
   VkDescriptorSet descriptor_set;
 };
 

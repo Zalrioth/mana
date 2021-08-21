@@ -311,6 +311,11 @@ static inline void model_vulkan_cleanup(struct Model* model, struct GPUAPI* gpu_
 
   vkDestroyBuffer(gpu_api->vulkan_state->device, model->lighting_uniform_buffer, NULL);
   vkFreeMemory(gpu_api->vulkan_state->device, model->lighting_uniform_buffers_memory, NULL);
+
+  if (model->animated) {
+    vkDestroyBuffer(gpu_api->vulkan_state->device, model->uniform_animation_buffer, NULL);
+    vkFreeMemory(gpu_api->vulkan_state->device, model->uniform_animation_buffers_memory, NULL);
+  }
 }
 
 void model_clone_delete(struct Model* model, struct GPUAPI* gpu_api) {
