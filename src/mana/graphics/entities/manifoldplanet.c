@@ -39,8 +39,6 @@ void manifold_planet_update_uniforms(struct ManifoldPlanet* planet, struct GPUAP
   dcubo.view = gpu_api->vulkan_state->gbuffer->view_matrix;
 
   dcubo.model = mat4_translate(MAT4_IDENTITY, planet->position);
-  dcubo.model = mat4_scale(dcubo.model, (vec3){.x = 10.0f, .y = 10.0f, .z = 10.0f});
-  dcubo.model = mat4_translate(dcubo.model, (vec3){.x = -50.0f, .y = -300.0f, .z = -50.0f});
 
   dcubo.camera_pos = camera->position;
 

@@ -51,7 +51,7 @@ static inline void vertex_init(struct Vertex* vertex) {
 
 struct ManifoldOctreeNode {
   int index;
-  vec3 position;
+  ivec3 position;
   int size;
   struct ManifoldOctreeNode* children[8];
   enum NodeType type;
@@ -61,7 +61,7 @@ struct ManifoldOctreeNode {
 };
 
 static inline void
-octree_node_init(struct ManifoldOctreeNode* octree_node, vec3 position, int size, enum NodeType type) {
+octree_node_init(struct ManifoldOctreeNode* octree_node, ivec3 position, int size, enum NodeType type) {
   octree_node->index = 0;
   octree_node->position = position;
   octree_node->size = size;
@@ -111,8 +111,8 @@ static inline void planet_normal_avx2(vec3 v, float dest[8], struct Vector* nois
 
 // TODO: Calculating normals can be much faster in a special noise function either by a single 8x1 array for SIMD with each position unique in 3D space
 // OR calculate bulk in chunky 8*8 kernel sorta thing
-#define FAST_NORMALS_AVX2 true
-static inline vec3 planet_normal(vec3 v, struct Vector* noises, int scale) {
+#define FAST_NORMALS_AVX2 false
+static inline vec3 planet_normal(vec3 v, struct RidgedFractalNoise cur_noise, int scale) {
 #if FAST_NORMALS_AVX2
   float dest[8] = {0};
   planet_normal_avx2(v, dest, noises, scale);
@@ -121,19 +121,19 @@ static inline vec3 planet_normal(vec3 v, struct Vector* noises, int scale) {
   return gradient;
 #else
   float h = 0.001f;
-  float dxp = Sphere((vec3){.x = v.x + h, .y = v.y, .z = v.z});
-  float dxm = Sphere((vec3){.x = v.x - h, .y = v.y, .z = v.z});
-  float dyp = Sphere((vec3){.x = v.x, .y = v.y + h, .z = v.z});
-  float dym = Sphere((vec3){.x = v.x, .y = v.y - h, .z = v.z});
-  float dzp = Sphere((vec3){.x = v.x, .y = v.y, .z = v.z + h});
-  float dzm = Sphere((vec3){.x = v.x, .y = v.y, .z = v.z - h});
+  float dxp = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x + h, v.y, v.z);
+  float dxm = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x - h, v.y, v.z);
+  float dyp = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x, v.y + h, v.z);
+  float dym = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x, v.y - h, v.z);
+  float dzp = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x, v.y, v.z + h);
+  float dzm = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x, v.y, v.z - h);
   vec3 gradient = (vec3){.x = dxp - dxm, .y = dyp - dym, .z = dzp - dzm};
   gradient = vec3_old_skool_normalise(gradient);
   return gradient;
 #endif
 }
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, struct Vector* noises);
+void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, ivec3 position, struct Vector* noises);
 void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct Map* vertice_map);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold);

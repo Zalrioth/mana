@@ -4,7 +4,7 @@
 
 #include <ubermath/ubermath.h>
 
-static const vec3 CornerDeltas[8] = {
+static const ivec3 CornerDeltas[8] = {
     {{{0, 0, 0}}},
     {{{1, 0, 0}}},
     {{{1, 0, 1}}},
@@ -15,7 +15,7 @@ static const vec3 CornerDeltas[8] = {
     {{{1, 1, 1}}},
     {{{0, 1, 1}}}};
 
-static const vec3 TCornerDeltas[8] = {
+static const ivec3 TCornerDeltas[8] = {
     {{{0, 0, 0}}},
     {{{0, 0, 1}}},
     {{{0, 1, 0}}},

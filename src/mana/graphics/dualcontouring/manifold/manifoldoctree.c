@@ -1,14 +1,7 @@
 #include "mana/graphics/dualcontouring/manifold/manifoldoctree.h"
 
-//struct Threadz {
-//  DWORD thread_id;
-//  HANDLE thread_handle;
-//  bool in_use;
-//};
-
-//static inline bool manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct Vector* noises, float* noise_set, int used_threads, struct Threadz thread_pool[]);
-static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], struct Vector* noises, float* noise_set);
-static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int scale, float* noise_set);
+static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, struct Vector* noises, struct RidgedFractalNoise cur_noise);
+static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int scale, ivec3 origin, struct RidgedFractalNoise cur_noise);
 static inline void manifold_octree_process_face(struct ManifoldOctreeNode* nodes[2], int direction, struct Vector* indexes, float threshold);
 static inline void manifold_octree_process_edge(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);
 static inline void manifold_octree_process_indexes(struct ManifoldOctreeNode* nodes[4], int direction, struct Vector* indexes, float threshold);
@@ -18,18 +11,29 @@ static inline void manifold_octree_cluster_face(struct ManifoldOctreeNode* nodes
 static inline void manifold_octree_cluster_edge(struct ManifoldOctreeNode* nodes[4], int direction, int* surface_index, struct ArrayList* collected_vertices);
 static inline void manifold_octree_cluster_indexes(struct ManifoldOctreeNode* nodes[8], int direction, int* max_surface_index, struct ArrayList* collected_vertices);
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* head_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, struct Vector* noises) {
+void manifold_octree_construct_base(struct ManifoldOctreeNode* head_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, ivec3 position, struct Vector* noises) {
   head_node->index = 0;
-  head_node->position = VEC3_ZERO;
+  head_node->position = position;
   head_node->size = size;
   head_node->type = MANIFOLD_NODE_INTERNAL;
   head_node->child_index = 0;
 
+  /*//#pragma omp parallel sections num_threads(omp_get_max_threads())
+  struct Noise* noise = vector_get(noises, 0);
+  struct RidgedFractalNoise cur_noise = noise->ridged_fractal_noise;
+  ivec3 correct_pos = ivec3_sub(position, ivec3_set(size / 2));
+  cur_noise.position[0] = correct_pos.x;
+  cur_noise.position[1] = correct_pos.y;
+  cur_noise.position[2] = correct_pos.z;
+  //float* noise_set = ridged_fractal_noise_eval_3d_avx2(&noise->ridged_fractal_noise, size, size, size);
+  float* noise_set = ridged_fractal_noise_eval_3d_avx2(&cur_noise, size + 8, size + 8, size + 8);
+  manifold_octree_construct_nodes(head_node, node_cache, noises, noise_set);
+  noise_free(noise_set);*/
+
   //#pragma omp parallel sections num_threads(omp_get_max_threads())
   struct Noise* noise = vector_get(noises, 0);
-  float* noise_set = ridged_fractal_noise_eval_3d_avx2(&noise->ridged_fractal_noise, size, size, size);
-  manifold_octree_construct_nodes(head_node, node_cache, noises, noise_set);
-  noise_free(noise_set);
+  struct RidgedFractalNoise cur_noise = noise->ridged_fractal_noise;
+  manifold_octree_construct_nodes(head_node, node_cache, size, noises, cur_noise);
 }
 
 static inline void manifold_octree_find_vertice(struct Vertex* vertex, struct Map* vertice_map) {
@@ -115,8 +119,11 @@ void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_no
     vector_delete(&vert_vectors[vector_num]);
 }
 
+#define BASE_SIZE 64
+#define BASE_LEVELS 7
+
 // Note: Extremely fast terrain generation done with multithreading and iteration, no joke came up with this while on the toilet
-static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], struct Vector* noises, float* noise_set) {
+static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, struct Vector* noises, struct RidgedFractalNoise cur_noise) {
   int levels = 0;
   for (int current_level = octree_node->size; current_level > 0; current_level /= 2)
     levels++;
@@ -141,9 +148,8 @@ static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* oc
 #pragma omp parallel for schedule(dynamic) num_threads(omp_get_max_threads())
     for (int node_num = 0; node_num < total_nodes[node_level]; node_num++) {
       int index = node_num % 8;
-      vec3 child_pos = TCornerDeltas[index];
       struct ManifoldOctreeNode* new_node = &node_cache[node_level][node_num];
-      octree_node_init(new_node, vec3_add(node_cache[node_level - 1][node_num / 8].position, vec3_scale(child_pos, (float)child_size)), child_size, MANIFOLD_NODE_INTERNAL);
+      octree_node_init(new_node, ivec3_add(node_cache[node_level - 1][node_num / 8].position, ivec3_scale(TCornerDeltas[index], child_size)), child_size, MANIFOLD_NODE_INTERNAL);
     }
   }
 
@@ -151,14 +157,13 @@ static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* oc
 #pragma omp parallel for schedule(dynamic) num_threads(omp_get_max_threads())
   for (int node_num = 0; node_num < total_nodes[levels - 1]; node_num++) {
     int index = node_num % 8;
-    vec3 child_pos = TCornerDeltas[index];
     struct ManifoldOctreeNode* new_node = &node_cache[levels - 1][node_num];
-    octree_node_init(new_node, vec3_add(node_cache[levels - 2][node_num / 8].position, vec3_scale(child_pos, 1)), 1, MANIFOLD_NODE_INTERNAL);
-    if (manifold_octree_construct_leaf(new_node, noises, octree_node->size, noise_set) == false)
+    octree_node_init(new_node, ivec3_add(node_cache[levels - 2][node_num / 8].position, ivec3_scale(TCornerDeltas[index], 1)), 1, MANIFOLD_NODE_INTERNAL);
+    if (manifold_octree_construct_leaf(new_node, noises, octree_node->size, octree_node->position, cur_noise) == false)
       new_node->type = MANIFOLD_NODE_NONE;
   }
 
-  // Note: Below can be optomized with simd but already very fast probably not needed
+  // Note: Below can be optimized with simd but already very fast probably not needed
   for (int node_level = levels - 2; node_level >= 0; node_level--) {
 #pragma omp parallel for schedule(dynamic) num_threads(omp_get_max_threads())
     for (int node_num = 0; node_num < total_nodes[node_level]; node_num++) {
@@ -184,7 +189,7 @@ static inline void manifold_octree_construct_nodes(struct ManifoldOctreeNode* oc
 }
 
 // TODO: Optimize below as much as possible
-static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int scale, float* noise_set) {
+static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* octree_node, struct Vector* noises, int scale, ivec3 origin, struct RidgedFractalNoise cur_noise) {
   octree_node->type = MANIFOLD_NODE_LEAF;
   int corners = 0;
   float samples[8] = {0};
@@ -193,8 +198,9 @@ static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* oct
 #pragma omp simd
   {
     for (int sample_num = 0; sample_num < 8; sample_num++) {
-      vec3 sample_position = vec3_add(octree_node->position, TCornerDeltas[sample_num]);
-      samples[sample_num] = noise_get(noise_set, scale, scale, scale, sample_position.x, sample_position.y, sample_position.z);
+      //ivec3 sample_position = ivec3_sub(ivec3_add(octree_node->position, TCornerDeltas[sample_num]), origin);
+      ivec3 sample_position = ivec3_add(octree_node->position, TCornerDeltas[sample_num]);
+      samples[sample_num] = ridged_fractal_noise_eval_3d_single(&cur_noise, sample_position.x, sample_position.y, sample_position.z);  //noise_get(noise_set, scale + 8, scale + 8, scale + 8, sample_position.x, sample_position.y, sample_position.z);
       if (samples[sample_num] < 0)
         corners |= 1 << sample_num;
     }
@@ -240,10 +246,10 @@ static inline bool manifold_octree_construct_leaf(struct ManifoldOctreeNode* oct
     int ei[12] = {0};
     while (v_edges[i][k] != -1) {
       ei[v_edges[i][k]] = 1;
-      vec3 a = vec3_add(octree_node->position, vec3_scale(TCornerDeltas[TEdgePairs[v_edges[i][k]][0]], octree_node->size));
-      vec3 b = vec3_add(octree_node->position, vec3_scale(TCornerDeltas[TEdgePairs[v_edges[i][k]][1]], octree_node->size));
-      vec3 intersection = vec3_add(a, vec3_divs(vec3_scale(vec3_sub(b, a), -samples[TEdgePairs[v_edges[i][k]][0]]), samples[TEdgePairs[v_edges[i][k]][1]] - samples[TEdgePairs[v_edges[i][k]][0]]));
-      vec3 n = planet_normal(intersection, noises, scale);
+      ivec3 a = ivec3_add(octree_node->position, ivec3_scale(TCornerDeltas[TEdgePairs[v_edges[i][k]][0]], octree_node->size));
+      ivec3 b = ivec3_add(octree_node->position, ivec3_scale(TCornerDeltas[TEdgePairs[v_edges[i][k]][1]], octree_node->size));
+      vec3 intersection = vec3_add(ivec3_to_vec3(a), vec3_divs(vec3_scale(ivec3_to_vec3(ivec3_sub(b, a)), -samples[TEdgePairs[v_edges[i][k]][0]]), samples[TEdgePairs[v_edges[i][k]][1]] - samples[TEdgePairs[v_edges[i][k]][0]]));
+      vec3 n = planet_normal(intersection, cur_noise, scale);
       normal = vec3_add(normal, n);
       qef_solver_add_simp(&get_vertice->qef, intersection, n);
       k++;
