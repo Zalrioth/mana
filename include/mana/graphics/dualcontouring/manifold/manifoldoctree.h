@@ -53,6 +53,7 @@ struct ManifoldOctreeNode {
   int index;
   ivec3 position;
   int size;
+  int scale;
   struct ManifoldOctreeNode* children[8];
   enum NodeType type;
   struct ArrayList* vertices;
@@ -60,11 +61,11 @@ struct ManifoldOctreeNode {
   int child_index;
 };
 
-static inline void
-octree_node_init(struct ManifoldOctreeNode* octree_node, ivec3 position, int size, enum NodeType type) {
+static inline void octree_node_init(struct ManifoldOctreeNode* octree_node, ivec3 position, int size, int scale, enum NodeType type) {
   octree_node->index = 0;
   octree_node->position = position;
   octree_node->size = size;
+  octree_node->scale = scale;
   octree_node->type = type;
 }
 
@@ -120,7 +121,7 @@ static inline vec3 planet_normal(vec3 v, struct RidgedFractalNoise cur_noise, in
   gradient = vec3_old_skool_normalise(gradient);
   return gradient;
 #else
-  float h = 0.001f;
+  float h = 0.001f * scale;
   float dxp = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x + h, v.y, v.z);
   float dxm = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x - h, v.y, v.z);
   float dyp = ridged_fractal_noise_eval_3d_single(&cur_noise, v.x, v.y + h, v.z);
@@ -133,7 +134,7 @@ static inline vec3 planet_normal(vec3 v, struct RidgedFractalNoise cur_noise, in
 #endif
 }
 
-void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, ivec3 position, struct Vector* noises);
+void manifold_octree_construct_base(struct ManifoldOctreeNode* octree_node, struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS], int size, int scale, ivec3 position, struct Vector* noises);
 void manifold_octree_destroy_octree(struct ManifoldOctreeNode* octree_node, struct Map* vertice_map);
 void manifold_octree_generate_vertex_buffer(struct ManifoldOctreeNode* octree_node, struct Vector* vertices);
 void manifold_octree_process_cell(struct ManifoldOctreeNode* octree_node, struct Vector* indexes, float threshold);

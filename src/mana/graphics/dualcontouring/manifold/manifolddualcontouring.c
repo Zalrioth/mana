@@ -137,16 +137,18 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
   }
 
   // What I'm looking for TCornerDeltas
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[0], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 0, .y = 0, .z = 0}, noises);
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[1], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 0, .y = 0, .z = 64}, noises);
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[2], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 0, .y = 64, .z = 0}, noises);
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[3], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 0, .y = 64, .z = 64}, noises);
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[4], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 64, .y = 0, .z = 0}, noises);
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[5], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 64, .y = 0, .z = 64}, noises);
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[6], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 64, .y = 64, .z = 0}, noises);
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[7], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, (ivec3){.x = 64, .y = 64, .z = 64}, noises);
+  int scale = 1;
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[0], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 0, .y = 0, .z = 0}, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[1], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 0, .y = 0, .z = 64}, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[2], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 0, .y = 64, .z = 0}, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[3], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 0, .y = 64, .z = 64}, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[4], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 64, .y = 0, .z = 0}, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[5], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 64, .y = 0, .z = 64}, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[6], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 64, .y = 64, .z = 0}, noises);
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[0]->children[7], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 64, .y = 64, .z = 64}, noises);
 
-  manifold_octree_construct_base(manifold_dual_contouring->tree->children[1], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution * 2, (ivec3){.x = 0, .y = 0, .z = 128}, noises);
+  scale = 8;
+  manifold_octree_construct_base(manifold_dual_contouring->tree->children[1], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution, scale, (ivec3){.x = 0, .y = 0, .z = 128}, noises);
   //manifold_octree_construct_base(manifold_dual_contouring->tree->children[2], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution / 2, (ivec3){.x = 32, .y = -32, .z = -32}, noises);
   //manifold_octree_construct_base(manifold_dual_contouring->tree->children[3], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution / 2, (ivec3){.x = 32, .y = -32, .z = -32}, noises);
   //manifold_octree_construct_base(manifold_dual_contouring->tree->children[4], manifold_dual_contouring->node_cache, manifold_dual_contouring->resolution / 2, (ivec3){.x = 96, .y = -32, .z = -32}, noises);
@@ -156,6 +158,7 @@ void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_du
 
   manifold_dual_contouring->tree->children[0]->type = MANIFOLD_NODE_INTERNAL;
 
+  manifold_dual_contouring->tree->children[1]->type = MANIFOLD_NODE_INTERNAL;
   manifold_dual_contouring->tree->children[2]->type = MANIFOLD_NODE_NONE;
   manifold_dual_contouring->tree->children[3]->type = MANIFOLD_NODE_NONE;
   manifold_dual_contouring->tree->children[4]->type = MANIFOLD_NODE_NONE;
