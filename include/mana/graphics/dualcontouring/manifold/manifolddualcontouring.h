@@ -14,7 +14,7 @@
 #include "mana/graphics/dualcontouring/qef.h"
 #include "mana/graphics/utilities/mesh.h"
 
-#define MANIFOLD_BENCHMARK 0
+#define MANIFOLD_BENCHMARK 1
 
 struct ManifoldDualContouringUniformBufferObject {
   alignas(32) mat4 model;
@@ -24,10 +24,10 @@ struct ManifoldDualContouringUniformBufferObject {
 };
 
 struct ManifoldDualContouring {
+  int max_subdivisions;
   int resolution;
-  int octree_size;
+
   struct ManifoldOctreeNode* tree;
-  struct ManifoldOctreeNode* node_cache[MAX_MANIFOLD_OCTREE_LEVELS];
   struct ArrayList* vertice_list;
 
   struct Shader* shader;
@@ -48,10 +48,10 @@ struct ManifoldDualContouring {
   VkDescriptorSet descriptor_set;
 };
 
-void manifold_dual_contouring_init(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct Shader* shader, int resolution, int size);
+void manifold_dual_contouring_init(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct Shader* shader, float size);
 void manifold_dual_contouring_delete(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api);
 void manifold_dual_contouring_recreate(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api);
-void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct Vector* noises, float threshold);
+void manifold_dual_contouring_contour(struct ManifoldDualContouring* manifold_dual_contouring, struct GPUAPI* gpu_api, struct NoiseModule* planet_shape, float threshold);
 void manifold_dual_contouring_construct_tree_grid(struct ManifoldOctreeNode* node);
 vec3 manifold_dual_contouring_get_normal_q(struct Vector* verts, int indexes[6], int index_length);
 

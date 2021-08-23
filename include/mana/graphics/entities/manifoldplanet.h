@@ -20,11 +20,11 @@ struct ManifoldPlanet {
   enum ManifoldPlanetType planet_type;
   struct ManifoldDualContouring manifold_dual_contouring;
   struct Shader* terrain_shader;
-  struct Vector* noises;
+  struct NoiseModule* planet_shape;
   vec3 position;
 };
 
-void manifold_planet_init(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api, size_t octree_size, struct Shader* shader, struct Vector* noises, vec3 position);
+void manifold_planet_init(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api, float planet_size, struct Shader* shader, struct NoiseModule* planet_shape, vec3 position);
 void manifold_planet_delete(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api);
 void manifold_planet_render(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api);
 void manifold_planet_update_uniforms(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api, struct Camera* camera, vec3 light_pos);

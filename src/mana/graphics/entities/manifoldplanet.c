@@ -1,13 +1,17 @@
 #include "mana/graphics/entities/manifoldplanet.h"
 
-void manifold_planet_init(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api, size_t octree_size, struct Shader* shader, struct Vector* noises, vec3 position) {
+void manifold_planet_init(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api, float planet_size, struct Shader* shader, struct NoiseModule* planet_shape, vec3 position) {
   planet->planet_type = MANIFOLD_ROUND_PLANET;
   planet->terrain_shader = shader;
   planet->position = position;
-  planet->noises = noises;
-  // Think the 14 here for "size" is meant to represent matrix scaling but hasn't been added yet
-  manifold_dual_contouring_init(&planet->manifold_dual_contouring, gpu_api, shader, octree_size, 14);
-  manifold_dual_contouring_contour(&planet->manifold_dual_contouring, gpu_api, noises, 0.0f);
+  planet->planet_shape = planet_shape;
+
+  // Don't forget to seed this with planet seed
+  // Sphere as base then perlin noise for planet terrain shape and noise for biomes
+  // Ridged noise for actual terrain
+
+  manifold_dual_contouring_init(&planet->manifold_dual_contouring, gpu_api, shader, planet_size);
+  manifold_dual_contouring_contour(&planet->manifold_dual_contouring, gpu_api, planet_shape, 0.0f);
 }
 
 void manifold_planet_delete(struct ManifoldPlanet* planet, struct GPUAPI* gpu_api) {

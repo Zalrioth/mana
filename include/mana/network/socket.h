@@ -44,7 +44,7 @@ static inline int socket_init(struct ZealSocket *zeal_socket) {
   SOCKET s;
   struct sockaddr_in server;
   char *message, server_reply[2000];
-  int recv_size;
+  int recv_size = 4096;
 
   printf("\nInitialising Winsock...");
   if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
